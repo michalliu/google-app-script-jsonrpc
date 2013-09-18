@@ -40,6 +40,7 @@
 */
 
 /*globals ContentService*/
+/*jslint unused:false*/
 ;(function jsonrpc_init(exports,undefined) {
   'use strict';
  /**
@@ -115,8 +116,28 @@
     }
 
     if (typeof fn === 'function') {
+     /*
+      *  If present, parameters for the rpc call MUST be provided as a Structured value.
+      *  Either by-position through an Array or by-name through an Object.
+      *
+      *  by-position: params MUST be an Array, containing the values in the Server expected order.
+      *
+      *  by-name:     params MUST be an Object, with member names that match the Server expected parameter names.
+      *               The absence of expected names MAY result in an error being generated. 
+      *               The names MUST match exactly, including case, to the method's expected parameters.
+      */
+      if (!Array.isArray(params) &&          // array is allowed
+          typeof params !== 'object' &&      // object is allowed
+          typeof params !== undefined &&     // undefined is allowed
+          typeof params !== null) {          // null is allowed
+        return jsonRpcError(-32602,'Invalid params, params accepts an Array or an Object not ' + typeof params ,id);
+      }
       try {
-        jsonRpcResult = fn(params);
+          if (params === undefined || params === null) {
+              jsonRpcResult = fn();
+          } else {
+              jsonRpcResult = fn(params);
+          }
       } catch (e) {
         return jsonRpcError(-32603,'Internal error ' + e,id);
       }
@@ -191,11 +212,12 @@
 }(this));
 
 function doGet(request) {
+  /*globals jsonRpc*/
   return jsonRpc(request);
 }
 
 function doJsonRpcTest() {
-  return "it's working";
+  return 'it\'s working';
 }
 
 var jsonRpcTest={
